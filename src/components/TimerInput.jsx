@@ -1,202 +1,124 @@
-import { useState } from "react";
+"use client";
+import { useState, useEffect } from "react";
+import FlipTimer from "./FlipTimer.jsx";
+import Confetti from "react-confetti";
 
 export default function TimerInput() {
-  const [time, setTime] = useState([0, 0, 0]);
-  const [timeLeft, setTimeLeft] = useState(Number(time) || 0);
+  const [timeLeft, setTimeLeft] = useState(0);
   const [pause, setPause] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  const onSubmit = (event) => {
-    event.preventDefault();
-    const hours = parseInt(event.target.hours.value);
-    const minutes = parseInt(event.target.minutes.value);
-    const seconds = parseInt(event.target.seconds.value);
-    const newTime = hours * 3600 + minutes * 60 + seconds;
-    setTime(newTime);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const hours = parseInt(e.target.hours.value) || 0;
+    const minutes = parseInt(e.target.minutes.value) || 0;
+    const seconds = parseInt(e.target.seconds.value) || 0;
+
+    setTimeLeft(hours * 3600 + minutes * 60 + seconds);
+    setPause(false);
+    setShowConfetti(false);
   };
 
-  function reset() {
-    setTime(0);
-  }
-
-  function pauseTimer() {
-    setPause(true);
-  }
-
-  function resumeTimer() {
-    setPause(false);
-  }
-
   useEffect(() => {
-    if (time >= 0) setTimeLeft(newTime);
-  }, [time]);
+    if (pause || timeLeft <= 0) return;
 
-  const total = Math.max(timeLeft, 0);
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-
-  useEffect(() => {
-    if (!timeLeft || pause) return;
-    if (!timeLeft) return;
-
-    const intervalId = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev - 1 === 0) {
+          setShowConfetti(true);
+        }
+        return prev - 1;
+      });
     }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [timeLeft, pause]);
-  
+    return () => clearInterval(interval);
+  }, [pause, timeLeft]);
+
+  const reset = () => {
+    setTimeLeft(0);
+    setShowConfetti(false);
+  };
+
+  const hours = Math.floor(timeLeft / 3600);
+  const minutes = Math.floor((timeLeft % 3600) / 60);
+  const seconds = timeLeft % 60;
+
+  const splitDigits = (n) => String(n).padStart(2, "0").split("");
 
   return (
-    <div className="space-y-14 max-w-[1700px] mx-auto px-6 md:px-12">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-white gap-20">
 
-      {/* FORM */}
-      <form
-        onSubmit={onSubmit}
-        className="bg-white shadow-md border border-[#E2DCC7] rounded-2xl p-6 space-y-5"
-      >
-        <div className="flex flex-wrap justify-center gap-6 text-base">
+      {showConfetti && <Confetti />}
 
-          <label className="flex items-center gap-2">
-            Hours:
-            <input
-              type="number"
-              name="hours"
-              min="0"
-              defaultValue="0"
-              className="border border-[#E2DCC7] rounded-xl p-2 w-20"
-            />
-          </label>
+      <form onSubmit={handleSubmit} className="flex items-center gap-3 mt-1">
+        <input type="number" name="hours" min="0" defaultValue="0" className="h-12 w-20 px-3 bg-white border-2 border-gray-400 rounded-md text-center text-base focus:outline-none"/>
+        
+        <p className="text-3xl text-gray-500 select-none">:</p>
 
-          <label className="flex items-center gap-2">
-            Minutes:
-            <input
-              type="number"
-              name="minutes"
-              min="0"
-              defaultValue="0"
-              className="border border-[#E2DCC7] rounded-xl p-2 w-20"
-            />
-          </label>
+        <input type="number" name="minutes" min="0" defaultValue="0" className="h-12 w-20 px-3 bg-white border-2 border-gray-400 rounded-md text-center text-base focus:outline-none" />
+        
+        <p className="text-3xl text-gray-500 select-none">:</p>
 
-          <label className="flex items-center gap-2">
-            Seconds:
-            <input
-              type="number"
-              name="seconds"
-              min="0"
-              defaultValue="0"
-              className="border border-[#E2DCC7] rounded-xl p-2 w-20"
-            />
-          </label>
-        </div>
+        <input type="number" name="seconds" min="0" defaultValue="0" className="h-12 w-20 px-3 bg-white border-2 border-gray-400 rounded-md text-center text-base focus:outline-none" />
+        
+        <button type="submit" className="h-12 px-6 bg-yellow-400 rounded-full shadow-sm text-sm font-semibold hover:shadow-md transition">
+          Start
+        </button>
 
-        <div className="flex justify-center">
-          <button
-            type="submit"
-            className="bg-[#F7D774] hover:bg-[#F5C94A]
-                       text-[#3A3A3A] font-semibold
-                       w-48 py-3 rounded-full shadow"
-          >
-            Start Timer
+        <div className="w-6"></div>
+
+        {pause ? (
+          <button type="button" onClick={() => setPause(false)} className="h-12 px-5 bg-red-400 rounded-full shadow-sm flex items-center justify-center hover:shadow-md transition">
+            <img src="/play.svg" className="w-5 h-5" alt="Resume" />
           </button>
-        </div>
+        ) : (
+          <button type="button" onClick={() => setPause(true)} className="h-12 px-5 bg-green-400 rounded-full shadow-sm flex items-center justify-center hover:shadow-md transition">
+            <img src="/pause.svg" className="w-5 h-5" alt="Pause" />
+          </button>
+        )}
+
+        <button type="button" onClick={reset} className="h-12 px-6 bg-gray-300 rounded-full shadow-sm text-sm font-semibold hover:shadow-md transition">
+          Reset
+        </button>
+
       </form>
 
-      {/* TIMER + IMAGE BOX */}
-      <div className="bg-white shadow-md border border-[#E2DCC7] rounded-2xl p-10">
+      <div className="flex flex-col items-center gap-6">
 
-        <div
-          className="
-            grid gap-8
-            grid-cols-1
-            items-start
-          "
-        >
+        <div className="flex items-center gap-10">
 
-          {/* TIMER */}
-          <div className="col-span-1 sm:col-span-3">
-            <div className="space-y-6 w-full">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full">
-
-                <div className="border-2 border-[#E2DCC7] shadow-md p-10 rounded-3xl flex justify-center bg-white">
-                  <h1 className="text-8xl md:text-9xl font-extrabold text-[#3A3A3A]">
-                    {hours.toString().padStart(2, "0")}
-                  </h1>
-                </div>
-
-                <div className="border-2 border-[#E2DCC7] shadow-md p-10 rounded-3xl flex justify-center bg-white">
-                  <h1 className="text-8xl md:text-9xl font-extrabold text-[#3A3A3A]">
-                    {minutes.toString().padStart(2, "0")}
-                  </h1>
-                </div>
-
-                <div className="border-2 border-[#E2DCC7] shadow-md p-10 rounded-3xl flex justify-center bg-white">
-                  <h1 className="text-8xl md:text-9xl font-extrabold text-[#3A3A3A]">
-                    {seconds.toString().padStart(2, "0")}
-                  </h1>
-                </div>
-
-                <p className="text-sm font-bold text-center text-[#B88A2C]">HOURS</p>
-                <p className="text-sm font-bold text-center text-[#B88A2C]">MINUTES</p>
-                <p className="text-sm font-bold text-center text-[#B88A2C]">SECONDS</p>
-
-                {pause ? (
-                    <button
-                      onClick={resumeTimer}
-                      className="bg-[#F7D774] hover:bg-[#F5C94A]
-                                text-[#3A3A3A] font-semibold
-                                w-48 py-3 rounded-full shadow"
-                    >
-                      Resume
-                    </button>
-                  ) : (
-                    <button
-                      onClick={pauseTimer}
-                      className="bg-[#F7D774] hover:bg-[#F5C94A]
-                                text-[#3A3A3A] font-semibold
-                                w-48 py-3 rounded-full shadow"
-                    >
-                      Pause
-                    </button>
-                  )}
-                  <button
-                    onClick={reset}
-                    className="bg-[#F7D774] hover:bg-[#F5C94A]
-                              text-[#3A3A3A] font-semibold
-                              w-48 py-3 rounded-full shadow"
-                  >
-                    Reset
-                  </button>
-              </div>
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex gap-2">
+              {splitDigits(hours).map((d, i) => (
+                <FlipTimer key={"h" + i} value={Number(d)} />
+              ))}
             </div>
+            <p className="text-sm font-bold text-gray-600 tracking-wide">HOURS</p>
+          </div>
+
+          <p className="text-[9rem] leading-none text-gray-300 font-light select-none">:</p>
+
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex gap-2">
+              {splitDigits(minutes).map((d, i) => (
+                <FlipTimer key={"m" + i} value={Number(d)} />
+              ))}
+            </div>
+            <p className="text-sm font-bold text-gray-600 tracking-wide">MINUTES</p>
+          </div>
+
+          <p className="text-[9rem] leading-none text-gray-300 font-light select-none">:</p>
+
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex gap-2">
+              {splitDigits(seconds).map((d, i) => (
+                <FlipTimer key={"s" + i} value={Number(d)} />
+              ))}
+            </div>
+            <p className="text-sm font-bold text-gray-600 tracking-wide">SECONDS</p>
           </div>
 
         </div>
-
-        {/* BUTTONS BELOW EVERYTHING */}
-        {/* <div className="flex flex-wrap justify-center gap-6 mt-10"> */}
-
-          {/* {pause ? (
-            <button
-              onClick={resumeTimer}
-              className="bg-[#F7D774] hover:bg-[#F5C94A]
-                         text-[#3A3A3A] font-semibold
-                         w-48 py-3 rounded-full shadow"
-            >
-              Resume
-            </button>
-          ) : (
-            <button
-              onClick={pauseTimer}
-              className="bg-[#F7D774] hover:bg-[#F5C94A]
-                         text-[#3A3A3A] font-semibold
-                         w-48 py-3 rounded-full shadow"
-            >
-              Pause
-            </button>
-          )} */}
-        {/* </div> */}
       </div>
     </div>
   );
