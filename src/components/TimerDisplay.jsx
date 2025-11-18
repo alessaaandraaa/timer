@@ -4,6 +4,10 @@ export default function TimerDisplay({ time = 0 }) {
   const [timeLeft, setTimeLeft] = useState(Number(time) || 0);
   const [pause, setPause] = useState(false);
 
+  function reset() {
+    setTime(0);
+  }
+
   function pauseTimer() {
     setPause(true);
   }
@@ -13,80 +17,78 @@ export default function TimerDisplay({ time = 0 }) {
   }
 
   useEffect(() => {
-    if (time >= 0) {
-      setTimeLeft(time);
-    }
+    if (time >= 0) setTimeLeft(time);
   }, [time]);
 
   const total = Math.max(timeLeft, 0);
-
-  let hours = 0;
-  let minutes = 0;
-  let seconds = 0;
-
-  hours = Math.floor(total / 3600);
-  minutes = Math.floor((total % 3600) / 60);
-  seconds = total % 60;
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
 
   useEffect(() => {
     if (!timeLeft || pause) return;
+    if (!timeLeft) return;
 
     const intervalId = setInterval(() => {
-      setTimeLeft(timeLeft - 1);
+      setTimeLeft(prev => prev - 1);
     }, 1000);
-
-    console.log(timeLeft);
 
     return () => clearInterval(intervalId);
   }, [timeLeft, pause]);
 
   return (
-    <div>
-      <div className="grid grid-cols-3 m-10 gap-3">
-        <div className="border-2 border-black shadow-md p-3 rounded-2xl">
-          <h1 className="text-9xl">
-            {hours < 10 ? "0" : ""}
-            {hours}
+    <div className="space-y-6 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full">
+
+        <div className="border-2 border-[#E2DCC7] shadow-md p-10 rounded-3xl flex justify-center bg-white">
+          <h1 className="text-8xl md:text-9xl font-extrabold text-[#3A3A3A]">
+            {hours.toString().padStart(2, "0")}
           </h1>
         </div>
-        <div className="border-2 border-black shadow-md p-3 rounded-2xl">
-          <h1 className="text-9xl">
-            {minutes < 10 ? "0" : ""}
-            {minutes}
+
+        <div className="border-2 border-[#E2DCC7] shadow-md p-10 rounded-3xl flex justify-center bg-white">
+          <h1 className="text-8xl md:text-9xl font-extrabold text-[#3A3A3A]">
+            {minutes.toString().padStart(2, "0")}
           </h1>
         </div>
-        <div className="border-2 border-black shadow-md p-3 rounded-2xl">
-          <h1 className="text-9xl">
-            {seconds < 10 ? "0" : ""}
-            {seconds}
+
+        <div className="border-2 border-[#E2DCC7] shadow-md p-10 rounded-3xl flex justify-center bg-white">
+          <h1 className="text-8xl md:text-9xl font-extrabold text-[#3A3A3A]">
+            {seconds.toString().padStart(2, "0")}
           </h1>
         </div>
-        <div>
-          <p className="text-xs font-bold">HOURS</p>
-        </div>
-        <div>
-          <p className="text-xs font-bold">MINUTES</p>
-        </div>
-        <div>
-          <p className="text-xs font-bold">SECONDS</p>
-        </div>
-      </div>
-      <div className="flex items-start">
+
+        <p className="text-sm font-bold text-center text-[#B88A2C]">HOURS</p>
+        <p className="text-sm font-bold text-center text-[#B88A2C]">MINUTES</p>
+        <p className="text-sm font-bold text-center text-[#B88A2C]">SECONDS</p>
+
         {pause ? (
+            <button
+              onClick={resumeTimer}
+              className="bg-[#F7D774] hover:bg-[#F5C94A]
+                         text-[#3A3A3A] font-semibold
+                         w-48 py-3 rounded-full shadow"
+            >
+              Resume
+            </button>
+          ) : (
+            <button
+              onClick={pauseTimer}
+              className="bg-[#F7D774] hover:bg-[#F5C94A]
+                         text-[#3A3A3A] font-semibold
+                         w-48 py-3 rounded-full shadow"
+            >
+              Pause
+            </button>
+          )}
           <button
-            className="rounded-md border p-1 pl-1.5 pr-1.5 mt-2 hover:bg-red-500"
-            onClick={resumeTimer}
+            onClick={reset}
+            className="bg-[#F7D774] hover:bg-[#F5C94A]
+                       text-[#3A3A3A] font-semibold
+                       w-48 py-3 rounded-full shadow"
           >
-            Resume
+            Reset
           </button>
-        ) : (
-          <button
-            className="rounded-md border p-1 pl-1.5 pr-1.5 mt-2 hover:bg-red-500"
-            onClick={pauseTimer}
-          >
-            Pause
-          </button>
-        )}
       </div>
     </div>
   );
